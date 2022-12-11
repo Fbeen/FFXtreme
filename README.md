@@ -4,7 +4,7 @@
 This project is a extended version of Keirfs [**FlashFloppy**](https://github.com/keirf/flashfloppy) and [**FF OSD**](https://github.com/keirf/flashfloppy-osd).
 You should take a look at his work first!
 
-##About this project
+## About this project
 Keirfs On Screen Display (OSD) doesn´t support a keyboard controller for the Atari ST while this version does.
 I have added some extra futures to the firmware as well:
 - Send FlashFloppy output to your Atari ST video display in all three resolutions, monochrome included.
