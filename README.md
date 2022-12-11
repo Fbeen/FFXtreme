@@ -18,10 +18,10 @@ FF OSD also emulates the popular LCD I2C interface, allowing
 connection to a wider range of hardware which traditionally uses anLCD.
 
 ## Download
-- [**Download FF OSD**][Downloads]
+- [**Download FF Xtreme**][Downloads]
 
 ## Documentation
-- [**Read the GitHub Wiki**](https://github.com/keirf/flashfloppy-osd/wiki)
+- [**Read the GitHub Wiki**](https://github.com/Fbeen/FFXtreme/wiki)
 
 ## Redistribution
 
