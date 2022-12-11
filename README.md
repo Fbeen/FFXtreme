@@ -18,7 +18,7 @@ FF OSD also emulates the popular LCD I2C interface, allowing
 connection to a wider range of hardware which traditionally uses anLCD.
 
 ## Download
-- [**Download FF Xtreme**][Downloads]
+- [**Download FF Xtreme**](https://github.com/Fbeen/FFXtreme/wiki/downloads)
 
 ## Documentation
 - [**Read the GitHub Wiki**](https://github.com/Fbeen/FFXtreme/wiki)
