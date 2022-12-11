@@ -1,7 +1,7 @@
 # FF Xtreme: On Screen Display for FlashFloppy with adapted hardware and firmware for the Atari ST
 
 ## Original project page
-This project is a extended version of Keirfs [**FlashFloppy**](https://github.com/keirf/flashfloppy) and [**FF OSD**](https://github.com/keirf/flashfloppy-osd).
+This project is a extended version of Keir Fraser [**FlashFloppy**](https://github.com/keirf/flashfloppy) and [**FF OSD**](https://github.com/keirf/flashfloppy-osd).
 You should take a look at his work first!
 
 ## About this project
