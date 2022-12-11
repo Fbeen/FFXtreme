@@ -1,0 +1,13 @@
+*.[oa]
+.*.d
+*~
+*.ld
+*.elf
+*.bin
+*.hex
+*.orig
+*.rej
+*.swp
+*.sh
+/FFXtreme*
+/notes.txt
