@@ -38,8 +38,15 @@ static void config_printk(const struct config *conf)
     printk(" Display Output: %s\n",
            config.display_spi ? "PA7/SPI1" : "PB15/SPI2");
     printk(" Display Enable: %s\n", dispen_pretty[config.dispctl_mode] );
-    printk(" H.Off: %u\n", conf->h_off);
-    printk(" V.Off: %u\n", conf->v_off);
+    printk(" Color H.Off: %u\n", conf->h_off);
+    printk(" Color V.Off: %u\n", conf->v_off);
+    printk(" Monochrome H.Off: %u\n", conf->mh_off);
+    printk(" Monochrome V.Off: %u\n", conf->mv_off);
+    printk(" Startup TOS: %u\n", conf->tos);
+    printk(" Startup sound: %s\n",
+           config.sound ? "Mono" : "Stereo");
+    printk(" Startup boot from: %s floppydrive\n",
+           config.boot ? "intern" : "extern");
     printk(" Rows: %u\n", conf->rows);
     printk(" Columns: %u-%u\n", conf->min_cols, conf->max_cols);
 }
@@ -79,6 +86,15 @@ void config_init(void)
         config = dfl_config;
         config_write_flash(&config);
     }
+    
+    if(gpio_read_pin(gpiob, 5) == 0) {
+    	config.display_spi = DISP_SPI1; // 1 PA7
+    	config.display_timing = DISP_VGA;
+    } else {
+        config.display_spi = DISP_SPI2; // 0 PB15
+    	config.display_timing = DISP_15KHZ;
+    }
+
 
     /* Hotkey configuration is stored in flash-config space but not actually
      * runtime modifiable or viewable. So, to avoid confusion, always use the 
@@ -109,6 +125,11 @@ static enum {
     C_dispen,
     C_h_off,
     C_v_off,
+    C_mh_off,
+    C_mv_off,
+    C_tos,
+    C_sound,
+    C_boot,
     /* LCD */
     C_rows,
     C_min_cols,
@@ -318,7 +339,7 @@ void config_process(uint8_t b, bool_t autosync_changed)
         break;
     case C_h_off:
         if (changed)
-            cnf_prt(0, "H.Off (1-199):");
+            cnf_prt(0, "Color H.Off (1-199):");
         if (b & B_LEFT)
             config.h_off = max_t(uint16_t, config.h_off-1, 1);
         if (b & B_RIGHT)
@@ -328,13 +349,61 @@ void config_process(uint8_t b, bool_t autosync_changed)
         break;
     case C_v_off:
         if (changed)
-            cnf_prt(0, "V.Off (2-299):");
+            cnf_prt(0, "Color V.Off (2-299):");
         if (b & B_LEFT)
             config.v_off = max_t(uint16_t, config.v_off-1, 2);
         if (b & B_RIGHT)
             config.v_off = min_t(uint16_t, config.v_off+1, 299);
         if (b)
             cnf_prt(1, "%u", config.v_off);
+        break;
+    case C_mh_off:
+        if (changed)
+            cnf_prt(0, "Mono H.Off (1-199):");
+        if (b & B_LEFT)
+            config.mh_off = max_t(uint16_t, config.mh_off-1, 1);
+        if (b & B_RIGHT)
+            config.mh_off = min_t(uint16_t, config.mh_off+1, 199);
+        if (b)
+            cnf_prt(1, "%u", config.mh_off);
+        break;
+    case C_mv_off:
+        if (changed)
+            cnf_prt(0, "Mono V.Off (2-299):");
+        if (b & B_LEFT)
+            config.mv_off = max_t(uint16_t, config.mv_off-1, 2);
+        if (b & B_RIGHT)
+            config.mv_off = min_t(uint16_t, config.mv_off+1, 299);
+        if (b)
+            cnf_prt(1, "%u", config.mv_off);
+        break;
+    case C_tos:
+        if (changed)
+            cnf_prt(0, "TOS rom (1-4):");
+        if (b & B_LEFT)
+            config.tos = max_t(uint16_t, config.tos-1, 1);
+        if (b & B_RIGHT)
+            config.tos = min_t(uint16_t, config.tos+1, 4);
+        if (b)
+            cnf_prt(1, "%u", config.tos);
+        break;
+    case C_sound:
+        if (changed)
+            cnf_prt(0, "Sound:");
+        if (b & (B_LEFT|B_RIGHT)) {
+            config.sound ^= 1;
+        }
+        if (b)
+            cnf_prt(1, "%s", config.sound ? "Mono" : "Stereo");
+        break;
+    case C_boot:
+        if (changed)
+            cnf_prt(0, "Boot:");
+        if (b & (B_LEFT|B_RIGHT)) {
+            config.boot ^= 1;
+        }
+        if (b)
+            cnf_prt(1, "%stern", config.boot ? "In" : "Ex");
         break;
     case C_rows:
         if (changed)

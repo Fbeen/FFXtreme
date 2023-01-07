@@ -31,11 +31,15 @@ void st_init(void)
 uint8_t st_check(void) 
 {
     uint8_t key;
+    // char msg[10];
     
     // Check if RXNE (Read data register not empty) is set
     if(usart3->sr & USART_SR_RXNE) {
     
         key = usart3->dr;
+        
+        // snprintf(msg, 10, "code: %u", key);
+        // printk(msg);
         
 	switch(key) {
 	case 29: // Control pressed
@@ -63,4 +67,13 @@ uint8_t st_check(void)
     
     return FALSE;
 }
+
+bool_t readSTmode(void) 
+{
+    // gpio_configure_pin(gpiob, 13, GPI_pull_up);
+    delay_us(5);
+    
+    return 1; // !gpio_read_pin(gpiob, 13);
+}
+
 

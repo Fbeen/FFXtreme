@@ -115,25 +115,34 @@ void IRQ_28(void) __attribute__((alias("IRQ_osd_pre_start")));
 #define pin_u0 8
 
 /* enhanced outputs Atari ST */
-#define gpio_rom_select gpioc    // gpio port for TOS rom select
-#define rom_select_low 14        // lower pin for TOS rom select
-#define rom_select_high 15       // higher pin for TOS rom select
+#define gpio_rom_select gpioa    // gpio port for TOS rom select
+#define rom_select_low 3         // lower pin for TOS rom select
+#define rom_select_high 4        // higher pin for TOS rom select
 
 #define gpio_boot_select gpioc   // gpio port for boot order select (boot from internal or external floppydrive)
 #define boot_order_pin 13        // pin for boot order select
 
-#define gpio_sound_select gpioa  // gpio port for selecting mono/stereo mode
-#define sound_select_pin 3       // pin for selecting mono/stereo mode
+#define gpio_sound_select gpiob  // gpio port for selecting mono/stereo mode
+#define sound_select_pin 0       // pin for selecting mono/stereo mode
 
-#define gpio_reset gpioa         // gpio port for reset line
-#define reset_pin 4              // reset pin
+#define gpio_reset gpiob         // gpio port for reset line
+#define reset_pin 3              // reset pin
+
+#define gpio_monochrome gpiob    // gpio port for detecting monochrome monitor
+#define monochrome_pin 5         // monochrome pin
 
 char TOStitle[4][16] = {
-    "TOS 1.2",
-    "TOS 1.4",
-    "TOS 2.1",
+    "TOS 1.0",
+    "TOS 1.02",
+    "TOS 1.04",
     "emuTOS",
 };
+
+uint8_t monochrome = 0;
+
+bool_t isSTmode = FALSE;
+
+
 /* end of enhanced outputs Atari ST */
 
 /* List of interrupts used by the display-sync and -output system. */
@@ -153,6 +162,7 @@ uint16_t running_display_timing;
 uint16_t running_polarity, detected_polarity;
 void st_init(void);
 uint8_t st_check(void);
+bool_t readSTmode(void);
 
 /* Guard the stacks with known values. */
 static void canary_init(void)
@@ -283,16 +293,16 @@ static void slave_arr_update(void)
     unsigned int hstart;
     switch (running_display_timing) {
         case DISP_VGA:
-            vstart = config.v_off*2;
+            vstart = config.mv_off*2;
             if (startup_display_spi == DISP_SPI1) {
-                hstart = config.h_off * 7;
+                hstart = config.mh_off * 7;
                 /* Enable output pin first (TIM4) and then start SPI transfers
                  * (TIM2). Timers run at 72 MHz, pixel clock is 36 MHz, 2 ticks
                  * per pixel: (13-1)/2 = 6 pixel */
                 tim4->arr = hstart-12;
                 tim2->arr = hstart-1;
             } else {
-                hstart = config.h_off * 7;
+                hstart = config.mh_off * 7;
                 /* Enable output pin first (TIM4) and then start SPI transfers
                  * (TIM2). Timers run at 72 MHz, pixel clock is 18 MHz, 4 ticks
                  * per pixel: (25-1)/4 = 6 pixel */ 
@@ -723,6 +733,7 @@ void update_st_keys(void)
         return;
     }
     
+    keys = 0;
     switch(stKey) {
         // OSD Setup
         case 72: // Up
@@ -737,7 +748,7 @@ void update_st_keys(void)
         case 98: // Help
             keys |= K_MENU;
             break;
-        case 83: // Delete --> Set OSD on or off
+        case 24: // O --> Set OSD on or off
             osd_on ^= 1;
             snprintf(msg, sizeof(msg), "OSD O%s", osd_on ? "n" : "ff");
             singleRuleNotify(msg);
@@ -745,18 +756,23 @@ void update_st_keys(void)
             
         // Enhanced Atari ST upgrades
         case 48: // B --> Boot from internal or external drive
+            gpio_write_pin(gpio_reset, reset_pin, 1);
             gpio_write_pin(gpio_boot_select, boot_order_pin, !gpio_read_pin(gpio_boot_select, boot_order_pin));
+            delay_ms(250);
+            gpio_write_pin(gpio_reset, reset_pin, 0);
             if(gpio_read_pin(gpio_boot_select, boot_order_pin)) {
-                singleRuleNotify("Boot from external drive!");
+                singleRuleNotify("Boot from internal drive!");
             } else {
-                singleRuleNotify("Boot from internal drive");
+                singleRuleNotify("Boot from external drive");
             }
             break;
-        case 19: // R --> Reset the computer
+        case 83: // Delete  --> Reset the computer
+//        case 19: // R --> Reset the computer
             singleRuleNotify("-- RESET --");
-            gpio_write_pin(gpio_reset, reset_pin, 0);
-            delay_ms(250);
-            gpio_write_pin(gpio_reset, reset_pin, 1);
+	    system_reset();
+//            gpio_write_pin(gpio_reset, reset_pin, 1);
+//            delay_ms(250);
+//            gpio_write_pin(gpio_reset, reset_pin, 0);
             break;
         case 31: // S --> Select mono or stereo sound
             gpio_write_pin(gpio_sound_select, sound_select_pin, !gpio_read_pin(gpio_sound_select, sound_select_pin));
@@ -771,8 +787,11 @@ void update_st_keys(void)
         case 61: // F3
         case 62: // F4  --> Select a TOS version
             stKey -= 59;
+            gpio_write_pin(gpio_reset, reset_pin, 1);
             gpio_write_pin(gpio_rom_select, rom_select_low, stKey & (1<<0));
             gpio_write_pin(gpio_rom_select, rom_select_high, stKey & (1<<1));
+            delay_ms(250);
+            gpio_write_pin(gpio_reset, reset_pin, 0);
             singleRuleNotify(TOStitle[stKey]);
             break;
     }
@@ -968,9 +987,11 @@ int main(void)
     time_init();
     console_init();
     i2c_init();
+    
+    isSTmode = readSTmode();
 
     /* PC13: Blue Pill Indicator LED (Active Low) */
-    gpio_configure_pin(gpioc, 13, GPI_pull_up);
+    // gpio_configure_pin(gpioc, 13, GPI_pull_up);
 
     /* PA0, PA1, PA2: Rotary encoder */
     for (i = 0; i < 3; i++)
@@ -987,13 +1008,23 @@ int main(void)
     gpio_configure_pin(gpioa, 4, GPO_opendrain(_2MHz, LOW));
     gpio_configure_pin(gpioa, 5, GPO_opendrain(_2MHz, LOW));
 
-    /* enhanced outputs Atari ST */
+    /* enhanced io Atari ST */
     gpio_configure_pin(gpio_rom_select, rom_select_low, GPI_pull_up);
     gpio_configure_pin(gpio_rom_select, rom_select_high, GPI_pull_up);
-    gpio_configure_pin(gpio_boot_select, boot_order_pin, GPI_pull_up);
+
+    gpio_configure_pin(gpio_boot_select, boot_order_pin, GPO_pushpull(_2MHz, HIGH));
+
     gpio_configure_pin(gpio_sound_select, sound_select_pin, GPI_pull_up);
-    gpio_configure_pin(gpio_reset, reset_pin, GPI_pull_up);
+    gpio_configure_pin(gpio_reset, reset_pin, GPO_opendrain(_2MHz, LOW));
+    gpio_configure_pin(gpio_monochrome, monochrome_pin, GPI_pull_up);
+
     /* end of enhanced outputs Atari ST */
+    gpio_configure_pin(gpiob, 8, GPO_opendrain(_2MHz, LOW));
+    gpio_configure_pin(gpiob, 9, GPO_opendrain(_2MHz, LOW));
+//    gpio_configure_pin(gpiob, 8, GPI_pull_up);
+//    gpio_configure_pin(gpiob, 9, GPI_pull_up);
+//    gpio_write_pin(gpiob, 8, 0);
+//    gpio_write_pin(gpiob, 9, 0);
 
     config_init();
     startup_display_spi = config.display_spi;
@@ -1001,8 +1032,15 @@ int main(void)
     running_polarity = SYNC_LOW;
     if (config.polarity == SYNC_HIGH)
         running_polarity = SYNC_HIGH;
-
+        
+    // atari config
+    i = config.tos - 1;
+    gpio_write_pin(gpio_rom_select, rom_select_low, i & (1<<0));
+    gpio_write_pin(gpio_rom_select, rom_select_high, i & (1<<1));
+    gpio_write_pin(gpio_boot_select, boot_order_pin, config.boot);
+    gpio_write_pin(gpio_sound_select, sound_select_pin, config.sound);
     /* Set user pin output modes and initial logic levels. */
+/* DISABLED BY FRANK
     for (i = 0; i < 3; i++) {
         bool_t level = (config.user_pin_high >> i) & 1;
         if (config.user_pin_opendrain & (1u<<i))
@@ -1012,7 +1050,7 @@ int main(void)
             gpio_configure_pin(gpio_user, pin_u0+i,
                                GPO_pushpull(_2MHz, level));
     }
-
+*/
     /* Display DMA setup: From memory into the Display Timer's CCRx. */
     if (startup_display_spi == DISP_SPI1)
         dma_display_spi1.cpar = (uint32_t)(unsigned long)&spi_display_spi1->dr;
@@ -1098,7 +1136,10 @@ int main(void)
     set_polarity();
 
     amiga_init();
-    st_init();
+    if(isSTmode) {
+        gpio_configure_pin(gpio_reset, reset_pin, GPO_opendrain(_2MHz, LOW));
+    	st_init();
+    }    
 
     rotary = gpioa->idr & 3;
     timer_init(&button_timer, button_timer_fn, NULL);
@@ -1237,8 +1278,12 @@ int main(void)
 
         }
 
-        update_amiga_keys();
-        update_st_keys();
+	if(isSTmode) {
+    	    update_st_keys();
+    	} else {
+    	    update_amiga_keys();
+    	}
+        
         emulate_gotek_buttons();
 
         /* Clear keyboard-hold/release notifier upon further key presses. */
@@ -1267,6 +1312,20 @@ int main(void)
         }
 
         i2c_process();
+        
+    	if(gpio_read_pin(gpio_monochrome, monochrome_pin) != monochrome) {
+    	    if(gpio_read_pin(gpio_monochrome, monochrome_pin) == 0) {
+    	    	monochrome = 0;
+    	    	startup_display_spi = DISP_SPI1; // 1 PA7
+    	    	setup_spi(DISP_VGA);
+	    } else {
+	        monochrome = 1;
+	        startup_display_spi = DISP_SPI2; // 0 PB15
+    	    	setup_spi(DISP_15KHZ);
+    	    }
+
+    	    // lcd_display_update();
+    	}
 
     }
 

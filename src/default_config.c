@@ -13,7 +13,12 @@ const static struct config dfl_config = {
 
     .polarity = SYNC_LOW,
     .h_off = 42,
-    .v_off = 50,
+    .v_off = 266,
+    .mh_off = 44,
+    .mv_off = 219,
+    .tos = 1,
+    .sound = 0,
+    .boot = 1,
     .min_cols = 16,
     .max_cols = 40,
     .dispctl_mode = DISPCTL_tristate,

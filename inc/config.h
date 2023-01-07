@@ -26,6 +26,10 @@ extern struct packed config {
     uint16_t polarity;
 
     uint16_t h_off, v_off;
+    uint16_t mh_off, mv_off; // monochrome
+    uint8_t  tos; // tos bank switching
+    uint8_t  sound; // mono or stereo sound at startup
+    uint8_t  boot; // startup with intern floppy or extern floppy
 
     uint16_t min_cols, max_cols;
 
