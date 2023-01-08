@@ -23,6 +23,9 @@ connection to a wider range of hardware which traditionally uses anLCD.
 ## Documentation
 - [**Read the GitHub Wiki**](https://github.com/Fbeen/FFXtreme/wiki)
 
+## Demo video
+[![youtube](https://user-images.githubusercontent.com/2814747/211155171-bc639b24-a388-4f82-a549-2daf706933e2.jpg)](https://youtu.be/2rItDM706Do)
+
 ## Redistribution
 
 FF OSD source code, and all binary releases, are freely redistributable
