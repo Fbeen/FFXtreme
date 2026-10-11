@@ -40,6 +40,7 @@ static void config_printk(const struct config *conf)
     printk(" Display Enable: %s\n", dispen_pretty[config.dispctl_mode] );
     printk(" Color H.Off: %u\n", conf->h_off);
     printk(" Color V.Off: %u\n", conf->v_off);
+    printk(" Color V.Off 60Hz: %u\n", conf->v_off60);
     printk(" Monochrome H.Off: %u\n", conf->mh_off);
     printk(" Monochrome V.Off: %u\n", conf->mv_off);
     printk(" Startup TOS: %u\n", conf->tos);
@@ -125,6 +126,7 @@ static enum {
     C_dispen,
     C_h_off,
     C_v_off,
+    C_v_off60,
     C_mh_off,
     C_mv_off,
     C_tos,
@@ -356,6 +358,16 @@ void config_process(uint8_t b, bool_t autosync_changed)
             config.v_off = min_t(uint16_t, config.v_off+1, 299);
         if (b)
             cnf_prt(1, "%u", config.v_off);
+        break;
+    case C_v_off60:
+        if (changed)
+            cnf_prt(0, "60Hz V.Off:");
+        if (b & B_LEFT)
+            config.v_off60 = max_t(uint16_t, config.v_off60-1, 2);
+        if (b & B_RIGHT)
+            config.v_off60 = min_t(uint16_t, config.v_off60+1, 299);
+        if (b)
+            cnf_prt(1, "%u", config.v_off60);
         break;
     case C_mh_off:
         if (changed)

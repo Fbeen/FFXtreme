@@ -1,10 +1,10 @@
 /*
  * atari.c
- * 
+ *
  * Inspect the Atari ST keyboard serial protocol and remember key presses.
- * 
+ *
  * Written by Frank Beentjes <frankbeen@gmail.com> & released by Keir Fraser <keir.xen@gmail.com>
- * 
+ *
  * This is free and unencumbered software released into the public domain.
  * See the file COPYING for more details, or visit <http://unlicense.org>.
  */
@@ -13,7 +13,33 @@
  *  B11: Keyboard RX
  */
 
-uint8_t stKeyboardState = 0; // keep track on the left Control and Alternate keys
+/* USART3 global interrupt. */
+#define irq_st_kbd 39
+void IRQ_39(void) __attribute__((alias("IRQ_st_kbd")));
+
+/* Left Control and Alternate keys: both must be held for our hotkeys. */
+#define ST_CTRL (1u << 1)
+#define ST_ALT  (1u << 2)
+static uint8_t stKeyboardState; // keep track on the left Control and Alternate keys
+
+/* Bytes received from the keyboard (IKBD). Filled by the interrupt handler, so
+ * that no byte is lost while the main loop is busy (a byte takes only 1.28ms
+ * at 7812.5 baud). */
+static uint8_t kbd_ring[32];
+static volatile uint8_t kbd_cons, kbd_prod;
+#define KBD_MASK(x) ((x) & (ARRAY_SIZE(kbd_ring)-1))
+
+static void IRQ_st_kbd(void)
+{
+    uint8_t c;
+
+    /* Reading SR then DR clears RXNE and any overrun error. */
+    (void)usart3->sr;
+    c = usart3->dr;
+
+    if ((uint8_t)(kbd_prod - kbd_cons) < ARRAY_SIZE(kbd_ring))
+        kbd_ring[KBD_MASK(kbd_prod++)] = c;
+}
 
 void st_init(void)
 {
@@ -25,55 +51,74 @@ void st_init(void)
 
     /* BAUD, 8n1. */
     usart3->brr = 4608; // 36.000.000 / 7812.5
-    usart3->cr1 = (USART_CR1_UE | USART_CR1_RE /* | USART_CR1_RXNEIE */ );
+    usart3->cr1 = (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);
+
+    IRQx_set_prio(irq_st_kbd, STKBD_IRQ_PRI);
+    IRQx_enable(irq_st_kbd);
 }
 
-uint8_t st_check(void) 
+/* Number of data bytes following an IKBD packet header 0xF6-0xFF. These are
+ * mouse, joystick, clock and status reports, not key codes. */
+static const uint8_t ikbd_packet_len[] = {
+    7,          /* F6: status report */
+    5,          /* F7: absolute mouse position */
+    2, 2, 2, 2, /* F8-FB: relative mouse movement */
+    6,          /* FC: time-of-day */
+    2,          /* FD: joystick report */
+    1, 1,       /* FE-FF: joystick 0/1 event */
+};
+
+/* Returns a key make code while Control+Alternate are held, any key release
+ * code (so that a held key is never left latched), or FALSE. */
+uint8_t st_check(void)
 {
+    static uint8_t skip;
     uint8_t key;
-    // char msg[10];
-    
-    // Check if RXNE (Read data register not empty) is set
-    if(usart3->sr & USART_SR_RXNE) {
-    
-        key = usart3->dr;
-        
-        // snprintf(msg, 10, "code: %u", key);
-        // printk(msg);
-        
-	switch(key) {
-	case 29: // Control pressed
-		stKeyboardState |= 1 << 1;
-		break;
-	case 157: // Control released
-		stKeyboardState &= ~(1 << 1);
-		break;
-	case 56: // Alternate pressed
-		stKeyboardState |= 1 << 2;
-		break;
-	case 184: // Alternate released
-		stKeyboardState &= ~(1 << 2);
-		break;
-	}
 
-	// return the pressed key only when Control and Alternate are held
-	if(stKeyboardState < 3) {
-		return FALSE;
-	}
-	
-	return key;
+    if (kbd_cons == kbd_prod)
+        return FALSE;
+    key = kbd_ring[KBD_MASK(kbd_cons++)];
 
+    /* Skip the data bytes of mouse/joystick packets: they are no key codes. */
+    if (skip) {
+        skip--;
+        return FALSE;
     }
-    
-    return FALSE;
+    if (key >= 0xf6) {
+        skip = ikbd_packet_len[key - 0xf6];
+        return FALSE;
+    }
+
+    switch (key) {
+    case 29: // Control pressed
+        stKeyboardState |= ST_CTRL;
+        return FALSE;
+    case 157: // Control released
+        stKeyboardState &= ~ST_CTRL;
+        break;
+    case 56: // Alternate pressed
+        stKeyboardState |= ST_ALT;
+        return FALSE;
+    case 184: // Alternate released
+        stKeyboardState &= ~ST_ALT;
+        break;
+    }
+
+    // always report key releases, so the caller can clear its key state
+    if (key & 0x80)
+        return key;
+
+    // return the pressed key only when Control and Alternate are held
+    if ((stKeyboardState & (ST_CTRL | ST_ALT)) != (ST_CTRL | ST_ALT))
+        return FALSE;
+
+    return key;
 }
 
-bool_t readSTmode(void) 
+bool_t readSTmode(void)
 {
     // gpio_configure_pin(gpiob, 13, GPI_pull_up);
     delay_us(5);
-    
+
     return 1; // !gpio_read_pin(gpiob, 13);
 }
-
-

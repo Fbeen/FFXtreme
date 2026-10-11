@@ -160,6 +160,7 @@ extern uint32_t _irq_stacktop[], _irq_stackbottom[];
 #define SYNC_IRQ_PRI          2
 #define I2C_IRQ_PRI           4
 #define AMIKBD_IRQ_PRI        5
+#define STKBD_IRQ_PRI         6
 #define TIMER_IRQ_PRI         8
 #define CONSOLE_IRQ_PRI      14
 

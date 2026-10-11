@@ -16,6 +16,8 @@ const static struct config dfl_config = {
     .v_off = 266,
     .mh_off = 44,
     .mv_off = 219,
+    /* 60Hz has 263 lines and a top border ~29 lines shorter than 50Hz. */
+    .v_off60 = 237,
     .tos = 1,
     .sound = 0,
     .boot = 1,
