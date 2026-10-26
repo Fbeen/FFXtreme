@@ -24,21 +24,30 @@ static uint8_t stKeyboardState; // keep track on the left Control and Alternate 
 
 /* Bytes received from the keyboard (IKBD). Filled by the interrupt handler, so
  * that no byte is lost while the main loop is busy (a byte takes only 1.28ms
- * at 7812.5 baud). */
-static uint8_t kbd_ring[32];
+ * at 7812.5 baud). The main loop can stall for 250ms (reset pulse after a
+ * hotkey), which is ~195 bytes of mouse reports: hence 256 entries. */
+static uint8_t kbd_ring[256];
 static volatile uint8_t kbd_cons, kbd_prod;
+static volatile bool_t kbd_overflow;
 #define KBD_MASK(x) ((x) & (ARRAY_SIZE(kbd_ring)-1))
 
 static void IRQ_st_kbd(void)
 {
     uint8_t c;
+    uint32_t sr;
 
-    /* Reading SR then DR clears RXNE and any overrun error. */
-    (void)usart3->sr;
+    /* Reading SR then DR clears RXNE and any overrun error. An overrun
+     * (eg. CPU stalled by a Flash erase) means a byte was lost. */
+    sr = usart3->sr;
     c = usart3->dr;
+    if (sr & USART_SR_ORE)
+        kbd_overflow = TRUE;
 
-    if ((uint8_t)(kbd_prod - kbd_cons) < ARRAY_SIZE(kbd_ring))
+    /* 8-bit indices: one entry stays unused to tell full from empty. */
+    if ((uint8_t)(kbd_prod - kbd_cons) < ARRAY_SIZE(kbd_ring)-1)
         kbd_ring[KBD_MASK(kbd_prod++)] = c;
+    else
+        kbd_overflow = TRUE;
 }
 
 void st_init(void)
@@ -74,6 +83,16 @@ uint8_t st_check(void)
 {
     static uint8_t skip;
     uint8_t key;
+
+    /* Bytes were lost, so we may be out of step with the packets and may
+     * have missed key releases. Drop everything and forget held keys. */
+    if (kbd_overflow) {
+        kbd_overflow = FALSE;
+        kbd_cons = kbd_prod;
+        skip = 0;
+        stKeyboardState = 0;
+        return 0x80; /* a key release, so the caller clears its key state */
+    }
 
     if (kbd_cons == kbd_prod)
         return FALSE;
