@@ -193,6 +193,10 @@ void fpec_write(const void *data, unsigned int size, uint32_t flash_address)
     uint16_t *_f = (uint16_t *)flash_address;
     const uint16_t *_d = data;
 
+    /* Flash is programmed in halfwords: round an odd size up (reading one
+     * byte past the data), or the loop below would never terminate. */
+    size = (size + 1) & ~1u;
+
     fpec_wait_and_clear();
     for (; size != 0; size -= 2) {
         flash->cr |= FLASH_CR_PG;
