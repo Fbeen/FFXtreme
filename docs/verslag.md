@@ -40,7 +40,7 @@ Alles hieronder is geflasht en door Frank op de hardware getest.
 10. **Pinnen:** TOS (A3/A4) en geluid (B0) worden actief aangestuurd. B8/B9 (ongebruikte
     Gotek-knoplijnen) worden niet meer laag getrokken.
 
-## Volgende stappen: release v2.0
+## Release v2.0 (uitgebracht)
 
 1. Documentatie bijwerken (README, RELEASE_NOTES, CLAUDE.md, dit verslag). **Gedaan.**
 2. `FW_VER` naar 2.0, bouwen, flashen, controleren dat het menu "v2.0" toont. **Gedaan.**
@@ -48,3 +48,4 @@ Alles hieronder is geflasht en door Frank op de hardware getest.
 4. Frank verhuist de repo naar de organisatie RetroLoft (GitHub: Settings → Transfer ownership).
    Daarna de remote en de links bijwerken. **Gedaan.**
 5. Tag `v2.0` en een GitHub-release met `.hex` en `.bin`. De downloadpagina op de wiki ook bijwerken.
+   **Gedaan:** https://github.com/RetroLoft/FFXtreme/releases/tag/v2.0

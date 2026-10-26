@@ -109,13 +109,15 @@ met de ST. De structurele oplossing is hardware: de Blue Pill op de 8 MHz van de
 (HSE-bypass, PLL ×9 = 72 MHz; 512 ST-klokken = 576 STM32-klokken = precies 72 SPI-bits per lijn).
 Frank wil daar nu geen moeite in steken.
 
-## Bezig: release v2.0
-Gedaan: documentatie, `FW_VER` 2.0 (geflasht, menu toont "v2.0"), samengevoegd in `master` (oude
-branches weg), repo verhuisd van `Fbeen/FFXtreme` naar de organisatie **RetroLoft**
-(`git@github.com:RetroLoft/FFXtreme.git`; SSH werkt, HTTPS heeft hier geen inloggegevens).
-Oude links worden door GitHub doorgestuurd: **nooit meer een nieuwe `Fbeen/FFXtreme` aanmaken.**
-Nog te doen: tag `v2.0` + GitHub-release met `.hex` en `.bin` (eerdere release: `v1.9`, 2022-12-11).
-De downloadlink in de README wijst naar de wiki (aparte repo): die pagina moet ook bijgewerkt worden.
+## Release v2.0 (2026-10-26): uitgebracht
+https://github.com/RetroLoft/FFXtreme/releases/tag/v2.0, tag `v2.0` op `master`, met
+`FFXtreme-v2.0.hex` en `.bin`. Eerdere release: `v1.9` (2022-12-11, `FFXtreme-v1.9.zip`).
+De repo is verhuisd van `Fbeen/FFXtreme` naar de organisatie **RetroLoft**
+(`git@github.com:RetroLoft/FFXtreme.git`). Oude links worden door GitHub doorgestuurd:
+**nooit meer een nieuwe `Fbeen/FFXtreme` aanmaken.** Op deze computer werkt git via SSH (sleutel van
+Fbeen) en is `gh` ingelogd als Fbeen (ADMIN op de repo). De wiki is een aparte repo
+(`git@github.com:RetroLoft/FFXtreme.wiki.git`); de downloadpagina wijst naar v2.0, de andere
+firmwarelinks naar `releases/latest`.
 Pushen, taggen en releases alleen als Frank het zegt.
 
 ## Mogelijke vervolgstappen
