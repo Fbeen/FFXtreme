@@ -110,11 +110,11 @@ met de ST. De structurele oplossing is hardware: de Blue Pill op de 8 MHz van de
 Frank wil daar nu geen moeite in steken.
 
 ## Bezig: release v2.0
-Plan: (1) documentatie bijwerken, (2) `FW_VER` naar 2.0, bouwen, flashen, menu toont "v2.0",
-(3) samenvoegen in `master` en `st-sync-fix`/`overdracht-desktop` opruimen, (4) Frank verhuist de repo
-zelf via GitHub "Transfer ownership" naar de organisatie **RetroLoft** (oude links worden doorgestuurd;
-nooit meer een nieuwe `Fbeen/FFXtreme` aanmaken), daarna remote en links in README/docs bijwerken,
-(5) tag `v2.0` + GitHub-release met `.hex` en `.bin`. Eerdere release: `v1.9` (2022-12-11).
+Gedaan: documentatie, `FW_VER` 2.0 (geflasht, menu toont "v2.0"), samengevoegd in `master` (oude
+branches weg), repo verhuisd van `Fbeen/FFXtreme` naar de organisatie **RetroLoft**
+(`git@github.com:RetroLoft/FFXtreme.git`; SSH werkt, HTTPS heeft hier geen inloggegevens).
+Oude links worden door GitHub doorgestuurd: **nooit meer een nieuwe `Fbeen/FFXtreme` aanmaken.**
+Nog te doen: tag `v2.0` + GitHub-release met `.hex` en `.bin` (eerdere release: `v1.9`, 2022-12-11).
 De downloadlink in de README wijst naar de wiki (aparte repo): die pagina moet ook bijgewerkt worden.
 Pushen, taggen en releases alleen als Frank het zegt.
 

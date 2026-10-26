@@ -6,9 +6,9 @@ staan in [CLAUDE.md](../CLAUDE.md). Dit verslag vertelt wat er gebeurd is en waa
 ## Verder gaan op een andere computer
 
 ```
-git clone https://github.com/Fbeen/FFXtreme      # na de verhuizing: RetroLoft/FFXtreme
+git clone git@github.com:RetroLoft/FFXtreme.git   # of https://github.com/RetroLoft/FFXtreme
 cd FFXtreme
-git checkout overdracht-desktop                  # na de release: master
+git checkout master
 ```
 
 ## Sessie 1 (2026-09-30, laptop): onderzoek en eerste fixes
@@ -43,8 +43,8 @@ Alles hieronder is geflasht en door Frank op de hardware getest.
 ## Volgende stappen: release v2.0
 
 1. Documentatie bijwerken (README, RELEASE_NOTES, CLAUDE.md, dit verslag). **Gedaan.**
-2. `FW_VER` naar 2.0, bouwen, flashen, controleren dat het menu "v2.0" toont.
-3. Samenvoegen in `master`, oude branches opruimen.
+2. `FW_VER` naar 2.0, bouwen, flashen, controleren dat het menu "v2.0" toont. **Gedaan.**
+3. Samenvoegen in `master`, oude branches opruimen. **Gedaan.**
 4. Frank verhuist de repo naar de organisatie RetroLoft (GitHub: Settings → Transfer ownership).
-   Daarna de remote en de links bijwerken.
+   Daarna de remote en de links bijwerken. **Gedaan.**
 5. Tag `v2.0` en een GitHub-release met `.hex` en `.bin`. De downloadpagina op de wiki ook bijwerken.
