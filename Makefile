@@ -1,5 +1,5 @@
 
-export FW_VER := 1.9
+export FW_VER := 2.0
 
 PROJ = FFXtreme
 VER := v$(FW_VER)
