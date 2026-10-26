@@ -24,6 +24,7 @@ mono/stereo-geluid.
 - `src/config.c`, `src/default_config.c`, `inc/config.h`: instellingen en het OSD-menu.
 - `hardware/*.zip`: Eagle-ontwerpen + schema-PDF's (FlashFloppy-uitbreiding, TOS-switcher, YM2149).
 - `docs/osd-instellingen.md`: naslag voor Frank: FF.CFG-opties, OSD-menu en sneltoetsen.
+- `docs/verslag.md`: verslag van wat er gedaan is en waar je verder gaat. **Lees dit eerst.**
 
 ### Pinnen (zie ook het schema in `hardware/FlashFloppy expansion.zip`)
 A8 = HSYNC (heet in de code "csync"), B14 = VSYNC, B15 = video kleur (SPI2, 9 MHz),
@@ -50,7 +51,7 @@ Bouwen **in de MSYS2-shell**. `make` vanuit Git Bash faalt met "Cannot create te
 ```
 MSYSTEM=UCRT64 /c/msys64/usr/bin/bash -lc 'cd <repo-pad> && make'
 ```
-Het resultaat komt in `src/FFXtreme.hex/.bin/.elf`. De build gebruikt `-Werror`. Er is geen Python op de pc van het werk.
+Het resultaat komt in `src/FFXtreme.hex/.bin/.elf`. De build gebruikt `-Werror`. Op Franks laptop is geen Python geïnstalleerd.
 
 ## Flashen
 - **Niet** via de micro-USB van de Blue Pill: de ROM-bootloader van de F103 kent geen USB, en Windows
@@ -63,7 +64,7 @@ Het resultaat komt in `src/FFXtreme.hex/.bin/.elf`. De build gebruikt `-Werror`.
   niet meer klopt en de config bij de eerste start teruggaat naar de fabrieksinstellingen. Lees
   Franks huidige H/V-offsets uit de back-up en geef ze aan hem door.
 
-## Stand van zaken (branch `st-sync-fix`)
+## Stand van zaken (branches `st-sync-fix` en `overdracht-desktop`)
 Klaar, bouwt, maar **nog niet op hardware getest**:
 1. **Verticaal springen van de OSD (Franks hoofdklacht) opgelost.** De oorzaak was dat de VSYNC-IRQ
    en de HSYNC-IRQ elkaar inhaalden als hun flanken bijna samenvielen, waardoor de lijntelling per beeld
