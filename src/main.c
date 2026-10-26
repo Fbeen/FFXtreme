@@ -1094,12 +1094,10 @@ int main(void)
     gpio_configure_pin(gpio_monochrome, monochrome_pin, GPI_pull_up);
 
     /* end of enhanced outputs Atari ST */
-    gpio_configure_pin(gpiob, 8, GPO_opendrain(_2MHz, LOW));
-    gpio_configure_pin(gpiob, 9, GPO_opendrain(_2MHz, LOW));
-//    gpio_configure_pin(gpiob, 8, GPI_pull_up);
-//    gpio_configure_pin(gpiob, 9, GPI_pull_up);
-//    gpio_write_pin(gpiob, 8, 0);
-//    gpio_write_pin(gpiob, 9, 0);
+    /* PB8,9: wired to the Gotek buttons (JP5 BTN_LEFT/RIGHT) but unused:
+     * buttons are remoted over I2C. Don't drive them. */
+    gpio_configure_pin(gpiob, 8, GPI_pull_up);
+    gpio_configure_pin(gpiob, 9, GPI_pull_up);
 
     config_init();
     monochrome_pin_level = gpio_read_pin(gpio_monochrome, monochrome_pin);
