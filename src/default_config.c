@@ -12,12 +12,12 @@
 const static struct config dfl_config = {
 
     .polarity = SYNC_LOW,
-    .h_off = 42,
-    .v_off = 266,
+    .h_off = 82,
+    .v_off = 241,
     .mh_off = 44,
     .mv_off = 219,
     /* 60Hz has 263 lines and a top border ~29 lines shorter than 50Hz. */
-    .v_off60 = 237,
+    .v_off60 = 212,
     .tos = 1,
     .sound = 0,
     .boot = 1,
