@@ -3,5 +3,29 @@
 ** Frank Beentjes <frankbeen@gmail.com>
 ************************************
 
+** v2.0 - october 2026
+ - Upgrading: the OSD settings are reset to factory defaults on first
+   start (the configuration layout changed).
+ - Fixed: OSD jumped vertically on the Atari ST. The HSYNC interrupt
+   now samples VSYNC itself, instead of racing a separate VSYNC interrupt.
+ - New: separate vertical offset for 60 Hz colour ("60Hz V.Off").
+ - New: clean restart when switching between colour and monochrome.
+ - Keyboard: received by interrupt into a buffer (no lost bytes); mouse
+   and joystick packets are skipped, so they cannot trigger hotkeys;
+   keys no longer get stuck; hotkeys need both Ctrl and Alt.
+ - Keyboard: recovers cleanly if bytes are lost (buffer overflow).
+ - TOS (Ctrl+Alt+F1-F4), boot drive (Ctrl+Alt+B) and sound (Ctrl+Alt+S)
+   are saved, so they survive a power cycle (EmuTOS needs a cold start).
+ - Ctrl+Alt+Delete resets the Atari ST instead of the OSD controller.
+ - OSD menu: Ctrl+Alt+Undo leaves it without saving; it closes by
+   itself after one minute without key presses.
+ - Fixed: every settings save restarted the OSD controller (Flash write
+   never terminated, the watchdog reset the chip).
+ - Fixed: mono/stereo messages were swapped and could show the old state.
+ - TOS and sound select lines are driven actively (were weak pulls).
+ - PB8/PB9 (unused Gotek button lines) are no longer driven low.
+ - Updated factory default H.Off/V.Off.
+ - Builds with GCC 12 and newer.
+
 ** v1.9 - december 2022
-- Initial release
+ - Initial release
