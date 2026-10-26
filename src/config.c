@@ -486,19 +486,46 @@ void config_process(uint8_t b, bool_t autosync_changed)
     }
 }
 
-void config_check_timeout(void)
+/* Close the menu and discard changes, as with the Discard option. */
+void config_cancel(void)
 {
-    if (!config_active
-        || (time_since(config_key_time) < time_ms(CONFIG_TIMEOUT_MS)))
+    if (!config_active)
         return;
 
     config_state = C_idle;
     config_active = FALSE;
     display_off();
     config = old_config;
-    printk("\nConfig menu timed out: changes discarded\n");
+    printk("\nConfig menu closed: changes discarded\n");
     config_printk(&config);
     lcd_display_update();
+}
+
+/* Store the ST settings changed by a hotkey, so that they also survive a
+ * power cycle (EmuTOS needs a cold start). If the menu is open, its unsaved
+ * changes are not written: only these settings are updated. */
+void config_save_atari(uint8_t tos, uint8_t boot, uint8_t sound)
+{
+    static struct config conf;
+
+    if ((config.tos == tos) && (config.boot == boot)
+        && (config.sound == sound))
+        return;
+
+    config.tos = old_config.tos = tos;
+    config.boot = old_config.boot = boot;
+    config.sound = old_config.sound = sound;
+
+    conf = config_active ? old_config : config;
+    display_off();
+    config_write_flash(&conf);
+}
+
+void config_check_timeout(void)
+{
+    if (config_active
+        && (time_since(config_key_time) >= time_ms(CONFIG_TIMEOUT_MS)))
+        config_cancel();
 }
 
 /*

@@ -123,7 +123,7 @@ void IRQ_28(void) __attribute__((alias("IRQ_osd_pre_start")));
 #define boot_order_pin 13        // pin for boot order select
 
 #define gpio_sound_select gpiob  // gpio port for selecting mono/stereo mode
-#define sound_select_pin 0       // pin for selecting mono/stereo mode
+#define sound_select_pin 0       // pin for selecting mono/stereo mode (HIGH = mono)
 
 #define gpio_reset gpiob         // gpio port for reset line
 #define reset_pin 3              // reset pin
@@ -783,6 +783,19 @@ void singleRuleNotify(char* msg)
     notify_time = time_now();
 }
 
+/* Hold the ST in reset for 250ms. The watchdog may time out after only
+ * 213ms, so keep kicking it. */
+static void st_reset_wait(void)
+{
+    int i;
+
+    for (i = 0; i < 5; i++) {
+        watchdog_kick();
+        delay_ms(50);
+    }
+    watchdog_kick();
+}
+
 void update_st_keys(void)
 {
     uint8_t stKey;
@@ -809,6 +822,9 @@ void update_st_keys(void)
         case 98: // Help
             keys |= K_MENU;
             break;
+        case 97: // Undo --> Leave the OSD menu, discarding changes
+            config_cancel();
+            break;
         case 24: // O --> Set OSD on or off
             osd_on ^= 1;
             snprintf(msg, sizeof(msg), "OSD O%s", osd_on ? "n" : "ff");
@@ -818,10 +834,11 @@ void update_st_keys(void)
         // Enhanced Atari ST upgrades
         case 48: // B --> Boot from internal or external drive
             gpio_write_pin(gpio_reset, reset_pin, 1);
-            gpio_write_pin(gpio_boot_select, boot_order_pin, !gpio_read_pin(gpio_boot_select, boot_order_pin));
-            delay_ms(250);
+            config_save_atari(config.tos, !config.boot, config.sound);
+            gpio_write_pin(gpio_boot_select, boot_order_pin, config.boot);
+            st_reset_wait();
             gpio_write_pin(gpio_reset, reset_pin, 0);
-            if(gpio_read_pin(gpio_boot_select, boot_order_pin)) {
+            if(config.boot) {
                 singleRuleNotify("Boot from internal drive!");
             } else {
                 singleRuleNotify("Boot from external drive");
@@ -836,11 +853,14 @@ void update_st_keys(void)
 //            gpio_write_pin(gpio_reset, reset_pin, 0);
             break;
         case 31: // S --> Select mono or stereo sound
-            gpio_write_pin(gpio_sound_select, sound_select_pin, !gpio_read_pin(gpio_sound_select, sound_select_pin));
-            if(gpio_read_pin(gpio_sound_select, sound_select_pin)) {
-                singleRuleNotify("Stereo sound!");
-            } else {
+            /* Don't read the pin back: it is only weakly pulled (input with
+             * pull-up/down) and takes a while to settle. */
+            config_save_atari(config.tos, config.boot, !config.sound);
+            gpio_write_pin(gpio_sound_select, sound_select_pin, config.sound);
+            if(config.sound) {
                 singleRuleNotify("Mono sound");
+            } else {
+                singleRuleNotify("Stereo sound!");
             }
             break;
         case 59: // F1
@@ -851,7 +871,8 @@ void update_st_keys(void)
             gpio_write_pin(gpio_reset, reset_pin, 1);
             gpio_write_pin(gpio_rom_select, rom_select_low, stKey & (1<<0));
             gpio_write_pin(gpio_rom_select, rom_select_high, stKey & (1<<1));
-            delay_ms(250);
+            config_save_atari(stKey + 1, config.boot, config.sound);
+            st_reset_wait();
             gpio_write_pin(gpio_reset, reset_pin, 0);
             singleRuleNotify(TOStitle[stKey]);
             break;

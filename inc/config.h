@@ -83,6 +83,8 @@ extern struct display config_display;
 void config_init(void);
 void config_process(uint8_t b, bool_t autosync_changed);
 void config_check_timeout(void);
+void config_cancel(void);
+void config_save_atari(uint8_t tos, uint8_t boot, uint8_t sound);
 
 /*
  * Local variables:

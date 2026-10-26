@@ -87,11 +87,14 @@ Alle sneltoetsen alleen met **Ctrl+Alt** ingedrukt:
 | Help | Instelmenu openen |
 | ↑ | Volgende menu-item |
 | ← / → | Waarde aanpassen (ingedrukt houden herhaalt) |
+| Undo | Menu verlaten zonder op te slaan |
 | O | OSD aan/uit |
-| B | Opstarten van interne/externe drive (reset de ST) |
-| S | Mono/stereo geluid |
-| F1–F4 | TOS kiezen (reset de ST) |
+| B | Opstarten van interne/externe drive (reset de ST, wordt onthouden) |
+| S | Mono/stereo geluid (wordt onthouden) |
+| F1–F4 | TOS kiezen (reset de ST, wordt onthouden) |
 | Delete | Reset |
+
+Na 1 minuut zonder toetsaanslag sluit het menu vanzelf, ook zonder op te slaan.
 
 Volgorde van het menu:
 1. Sync Polarity (Low laten staan)
