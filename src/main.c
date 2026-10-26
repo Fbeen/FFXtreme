@@ -851,8 +851,7 @@ void update_st_keys(void)
             singleRuleNotify("-- RESET --");
             break;
         case 31: // S --> Select mono or stereo sound
-            /* Don't read the pin back: it is only weakly pulled (input with
-             * pull-up/down) and takes a while to settle. */
+            /* Don't read the pin back: the config is the reference. */
             config_save_atari(config.tos, config.boot, !config.sound);
             gpio_write_pin(gpio_sound_select, sound_select_pin, config.sound);
             if(config.sound) {
@@ -1083,18 +1082,14 @@ int main(void)
     /* PB14 = VSYNC input */
     gpio_configure_pin(gpio_vsync, pin_vsync, GPI_pull_up);
 
-    /* PA3,4,5: Used to be Gotek buttons. Hold LOW to force disconnection. */
-    gpio_configure_pin(gpioa, 3, GPO_opendrain(_2MHz, LOW));
-    gpio_configure_pin(gpioa, 4, GPO_opendrain(_2MHz, LOW));
+    /* PA5: Used to be a Gotek button. Hold LOW to force disconnection.
+     * (PA3,4 are the TOS select outputs, set up below.) */
     gpio_configure_pin(gpioa, 5, GPO_opendrain(_2MHz, LOW));
 
-    /* enhanced io Atari ST */
-    gpio_configure_pin(gpio_rom_select, rom_select_low, GPI_pull_up);
-    gpio_configure_pin(gpio_rom_select, rom_select_high, GPI_pull_up);
-
+    /* enhanced io Atari ST (TOS and sound select outputs are set up once the
+     * config is loaded, see below) */
     gpio_configure_pin(gpio_boot_select, boot_order_pin, GPO_pushpull(_2MHz, HIGH));
 
-    gpio_configure_pin(gpio_sound_select, sound_select_pin, GPI_pull_up);
     gpio_configure_pin(gpio_reset, reset_pin, GPO_opendrain(_2MHz, LOW));
     gpio_configure_pin(gpio_monochrome, monochrome_pin, GPI_pull_up);
 
@@ -1116,11 +1111,17 @@ int main(void)
         running_polarity = SYNC_HIGH;
         
     // atari config
+    /* Drive the TOS and sound select lines actively: the boards have 10k
+     * pull resistors, which the weak internal pulls cannot overcome. Set
+     * up with the configured level, so the lines never glitch. */
     i = config.tos - 1;
-    gpio_write_pin(gpio_rom_select, rom_select_low, i & (1<<0));
-    gpio_write_pin(gpio_rom_select, rom_select_high, i & (1<<1));
+    gpio_configure_pin(gpio_rom_select, rom_select_low,
+                       GPO_pushpull(_2MHz, !!(i & (1<<0))));
+    gpio_configure_pin(gpio_rom_select, rom_select_high,
+                       GPO_pushpull(_2MHz, !!(i & (1<<1))));
     gpio_write_pin(gpio_boot_select, boot_order_pin, config.boot);
-    gpio_write_pin(gpio_sound_select, sound_select_pin, config.sound);
+    gpio_configure_pin(gpio_sound_select, sound_select_pin,
+                       GPO_pushpull(_2MHz, config.sound));
     /* Set user pin output modes and initial logic levels. */
 /* DISABLED BY FRANK
     for (i = 0; i < 3; i++) {
