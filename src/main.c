@@ -844,13 +844,11 @@ void update_st_keys(void)
                 singleRuleNotify("Boot from external drive");
             }
             break;
-        case 83: // Delete  --> Reset the computer
-//        case 19: // R --> Reset the computer
+        case 83: // Delete  --> Reset the computer (the ST, not the STM32)
+            gpio_write_pin(gpio_reset, reset_pin, 1);
+            st_reset_wait();
+            gpio_write_pin(gpio_reset, reset_pin, 0);
             singleRuleNotify("-- RESET --");
-	    system_reset();
-//            gpio_write_pin(gpio_reset, reset_pin, 1);
-//            delay_ms(250);
-//            gpio_write_pin(gpio_reset, reset_pin, 0);
             break;
         case 31: // S --> Select mono or stereo sound
             /* Don't read the pin back: it is only weakly pulled (input with

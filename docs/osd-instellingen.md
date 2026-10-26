@@ -92,7 +92,7 @@ Alle sneltoetsen alleen met **Ctrl+Alt** ingedrukt:
 | B | Opstarten van interne/externe drive (reset de ST, wordt onthouden) |
 | S | Mono/stereo geluid (wordt onthouden) |
 | F1–F4 | TOS kiezen (reset de ST, wordt onthouden) |
-| Delete | Reset |
+| Delete | Reset van de ST |
 
 Na 1 minuut zonder toetsaanslag sluit het menu vanzelf, ook zonder op te slaan.
 
