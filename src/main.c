@@ -1374,6 +1374,7 @@ int main(void)
             config_process(b & ~B_PROCESSED, autosync_changed);
             autosync_changed = FALSE;
         }
+        config_check_timeout();
 
         i2c_process();
         

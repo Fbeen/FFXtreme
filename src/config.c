@@ -141,6 +141,13 @@ static enum {
     C_max
 } config_state;
 
+/* Config at menu entry, restored by Discard or by the menu timeout. */
+static struct config old_config;
+
+/* The menu closes (discarding changes) after this long without key presses. */
+#define CONFIG_TIMEOUT_MS 60000
+static time_t config_key_time;
+
 static void cnf_prt(int row, const char *format, ...)
 {
     va_list ap;
@@ -192,7 +199,6 @@ void config_process(uint8_t b, bool_t autosync_changed)
     bool_t changed = FALSE;
     static enum { C_SAVE = 0, C_SAVEREBOOT, C_USE, C_DISCARD,
                   C_RESET, C_NC_MAX } new_config;
-    static struct config old_config;
 
     _b = b;
     b &= b ^ (pb & B_SELECT);
@@ -208,6 +214,9 @@ void config_process(uint8_t b, bool_t autosync_changed)
         case 'o': b |= B_LEFT; break;
         }
     }
+
+    if (b)
+        config_key_time = time_now();
 
     if (b & B_SELECT) {
         if (++config_state >= C_max) {
@@ -475,6 +484,21 @@ void config_process(uint8_t b, bool_t autosync_changed)
         break;
     }
     }
+}
+
+void config_check_timeout(void)
+{
+    if (!config_active
+        || (time_since(config_key_time) < time_ms(CONFIG_TIMEOUT_MS)))
+        return;
+
+    config_state = C_idle;
+    config_active = FALSE;
+    display_off();
+    config = old_config;
+    printk("\nConfig menu timed out: changes discarded\n");
+    config_printk(&config);
+    lcd_display_update();
 }
 
 /*
